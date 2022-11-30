@@ -13,7 +13,7 @@ import java.util.List;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@FeignClient(name = "statClient", url = "${stats-server.url}")
+@FeignClient(name = "statClient", url = "${EWM_STATS_SERVER_URL}")
 public interface StatClient {
 
     @RequestMapping(method = RequestMethod.POST, value = "/hit", consumes = APPLICATION_JSON_VALUE)
