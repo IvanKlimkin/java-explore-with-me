@@ -29,19 +29,19 @@ public class CompilationMapper {
                                 () -> new ServerException("Событие с таким eventID отсутствует.")))
                         .collect(Collectors.toList());
         return new Compilation(
-                events,
                 newCompilationDto.getId(),
                 newCompilationDto.getPinned(),
-                newCompilationDto.getTitle()
+                newCompilationDto.getTitle(),
+                events
         );
     }
 
     public CompilationDto toCompilationDto(Compilation compilation) {
         return new CompilationDto(
-                eventMapper.toShortDto(compilation.getEvents()),
                 compilation.getId(),
                 compilation.getPinned(),
-                compilation.getTitle()
+                compilation.getTitle(),
+                eventMapper.toShortDto(compilation.getEvents())
         );
     }
 

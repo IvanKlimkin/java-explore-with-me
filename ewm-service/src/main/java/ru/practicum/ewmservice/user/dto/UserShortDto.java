@@ -1,7 +1,7 @@
 package ru.practicum.ewmservice.user.dto;
 
 import lombok.*;
-import ru.practicum.ewmservice.Create;
+import ru.practicum.ewmservice.utils.Create;
 
 import javax.validation.constraints.NotBlank;
 

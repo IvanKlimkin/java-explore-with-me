@@ -1,8 +1,8 @@
 package ru.practicum.ewmservice.event.dto;
 
 import lombok.*;
-import ru.practicum.ewmservice.Create;
-import ru.practicum.ewmservice.Update;
+import ru.practicum.ewmservice.utils.Create;
+import ru.practicum.ewmservice.utils.Update;
 import ru.practicum.ewmservice.event.model.Location;
 
 import javax.validation.constraints.NotBlank;

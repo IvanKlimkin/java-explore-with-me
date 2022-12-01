@@ -1,7 +1,11 @@
-package ru.practicum.statsserver;
+package ru.practicum.statsserver.mapper;
 
 import com.querydsl.core.Tuple;
 import org.springframework.stereotype.Component;
+import ru.practicum.statsserver.model.QRequestStat;
+import ru.practicum.statsserver.model.RequestStat;
+import ru.practicum.statsserver.dto.ViewStats;
+import ru.practicum.statsserver.dto.RequestDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

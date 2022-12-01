@@ -1,9 +1,10 @@
 package ru.practicum.ewmservice.compilation.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewmservice.EwmPageRequest;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
 import ru.practicum.ewmservice.compilation.dto.CompilationDto;
 import ru.practicum.ewmservice.compilation.dto.NewCompilationDto;
 import ru.practicum.ewmservice.compilation.mapper.CompilationMapper;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationMapper compilationMapper;
@@ -26,6 +28,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto createNewCompilation(NewCompilationDto newCompilationDto) {
+        log.info("Создание новой подборки событий");
         return compilationMapper.toCompilationDto(
                 compilationRepository.save(
                         compilationMapper.toCompilation(newCompilationDto)));
@@ -34,6 +37,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public void deleteCompilation(Long compId) {
+        log.info("Удаление подборки событий");
         compilationRepository.deleteById(compId);
     }
 
@@ -47,6 +51,7 @@ public class CompilationServiceImpl implements CompilationService {
         List<Event> compEvents = compilation.getEvents();
         compEvents.add(event);
         compilation.setEvents(compEvents);
+        log.info("Добавление события в подборку");
         compilationRepository.save(compilation);
     }
 
@@ -60,6 +65,7 @@ public class CompilationServiceImpl implements CompilationService {
         List<Event> compEvents = compilation.getEvents();
         compEvents.remove(event);
         compilation.setEvents(compEvents);
+        log.info("Удаление события из подборки");
         compilationRepository.save(compilation);
     }
 
@@ -70,6 +76,7 @@ public class CompilationServiceImpl implements CompilationService {
                 () -> new ServerException("Подборка с таким ID отсутствует."));
         compilation.setPinned(true);
         compilationRepository.save(compilation);
+        log.info("Подборка сохранена на главной странице.");
     }
 
     @Override
@@ -79,16 +86,19 @@ public class CompilationServiceImpl implements CompilationService {
                 () -> new ServerException("Подборка с таким ID отсутствует."));
         compilation.setPinned(false);
         compilationRepository.save(compilation);
+        log.info("Подборка откреплена с главной страницы.");
     }
 
     @Override
     public CompilationDto getCompilationById(Long compId) {
+        log.info("Получение подборки по Id");
         return compilationMapper.toCompilationDto(compilationRepository.findById(compId).orElseThrow(
                 () -> new ServerException("Подборка с таким ID отсутствует.")));
     }
 
     @Override
     public List<CompilationDto> getCompilationsByCondition(Boolean pinned, EwmPageRequest pageRequest) {
+        log.info("Получение подборки событий по условиям.");
         return compilationMapper.toCompilationDto(compilationRepository.findCompilationsByPinned(pinned, pageRequest));
     }
 }

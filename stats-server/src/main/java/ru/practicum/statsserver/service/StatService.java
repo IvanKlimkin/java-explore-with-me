@@ -1,4 +1,7 @@
-package ru.practicum.statsserver;
+package ru.practicum.statsserver.service;
+
+import ru.practicum.statsserver.dto.ViewStats;
+import ru.practicum.statsserver.dto.RequestDto;
 
 import java.time.LocalDateTime;
 import java.util.List;

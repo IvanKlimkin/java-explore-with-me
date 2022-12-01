@@ -11,9 +11,9 @@ import java.util.List;
 @Setter
 @ToString
 public class NewCompilationDto {
-    List<Long> events;
-    Long id;
-    Boolean pinned;
+    private Long id;
+    private Boolean pinned;
     @NotBlank
-    String title;
+    private String title;
+    private List<Long> events;
 }

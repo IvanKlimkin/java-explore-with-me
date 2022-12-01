@@ -1,9 +1,10 @@
-package ru.practicum.statsserver;
+package ru.practicum.statsserver.repository;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import ru.practicum.statsserver.model.QRequestStat;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;

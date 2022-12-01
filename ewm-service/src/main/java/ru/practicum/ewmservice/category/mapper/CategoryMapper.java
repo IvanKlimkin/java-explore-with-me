@@ -4,13 +4,14 @@ import org.springframework.stereotype.Component;
 import ru.practicum.ewmservice.category.dto.CategoryDto;
 import ru.practicum.ewmservice.category.model.Category;
 
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class CategoryMapper {
 
-    public Category toCategory(CategoryDto categoryDto) {
+    public Category toCategory(@NotNull CategoryDto categoryDto) {
         return new Category(
                 categoryDto.getId(),
                 categoryDto.getName());

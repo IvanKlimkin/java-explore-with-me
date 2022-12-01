@@ -1,7 +1,7 @@
 package ru.practicum.ewmservice.event.dto;
 
 import lombok.*;
-import ru.practicum.ewmservice.Update;
+import ru.practicum.ewmservice.utils.Update;
 
 import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.NotBlank;

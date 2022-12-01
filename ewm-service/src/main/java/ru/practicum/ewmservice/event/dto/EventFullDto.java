@@ -2,7 +2,7 @@ package ru.practicum.ewmservice.event.dto;
 
 
 import lombok.*;
-import ru.practicum.ewmservice.Create;
+import ru.practicum.ewmservice.utils.Create;
 import ru.practicum.ewmservice.category.dto.CategoryDto;
 import ru.practicum.ewmservice.event.model.Location;
 import ru.practicum.ewmservice.event.model.State;

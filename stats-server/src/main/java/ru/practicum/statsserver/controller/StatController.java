@@ -1,8 +1,11 @@
-package ru.practicum.statsserver;
+package ru.practicum.statsserver.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.statsserver.service.StatService;
+import ru.practicum.statsserver.dto.ViewStats;
+import ru.practicum.statsserver.dto.RequestDto;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;

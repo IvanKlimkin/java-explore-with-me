@@ -15,14 +15,14 @@ import java.util.List;
 @Entity
 @Table(name = "compilations")
 public class Compilation {
-    @OneToMany
-    @JoinColumn(name = "compilation_id")
-    List<Event> events = new ArrayList<>();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
     @Column(name = "pinned", columnDefinition = "boolean default false", nullable = false)
-    Boolean pinned;
+    private Boolean pinned;
     @Column(name = "title", nullable = false, length = 512)
-    String title;
+    private String title;
+    @OneToMany
+    @JoinColumn(name = "compilation_id")
+    private List<Event> events = new ArrayList<>();
 }

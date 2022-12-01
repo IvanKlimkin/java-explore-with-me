@@ -1,6 +1,7 @@
 package ru.practicum.ewmservice.request.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.event.model.Event;
@@ -19,6 +20,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class RequestServiceImpl implements RequestService {
 
@@ -32,6 +34,7 @@ public class RequestServiceImpl implements RequestService {
     public List<ParticipationRequestDto> getAllUserOwnRequests(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
+        log.info("Запрос получения мероприятий инициированных пользователем.");
         return requestMapper.toDto(requestRepository.findParticipationRequestsByRequester(user));
     }
 
@@ -41,6 +44,7 @@ public class RequestServiceImpl implements RequestService {
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
         Event event = eventRepository.findById(eventId).orElseThrow(
                 () -> new ServerException("Событие с таким eventID отсутствует."));
+        log.info("Запрос получения запросов на мероприятия от пользователя.");
         if (!Objects.equals(event.getInitiator(), user)) {
             throw new ServerException("Только пользователь создавший событие имеет право на просмотр запросов");
         }
@@ -54,6 +58,7 @@ public class RequestServiceImpl implements RequestService {
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
         Event event = eventRepository.findById(eventId).orElseThrow(
                 () -> new ServerException("Событие с таким eventID отсутствует."));
+        log.info("Запрос создания нового запроса на участие пользователя в мероприятии.");
         if (requestRepository.findParticipationRequestsByRequesterAndEvent(user, event) == null &&
                 event.getInitiator().getId() != userId &&
                 event.getConfirmedRequests() < event.getParticipantLimit()) {
@@ -82,9 +87,10 @@ public class RequestServiceImpl implements RequestService {
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
         ParticipationRequest request = requestRepository.findById(reqId).orElseThrow(
                 () -> new ServerException("Запрос с таким ID отсутствует."));
+        log.info("Запрос на изменение статуса запроса.");
         Event event = request.getEvent();
         if (eventId.equals(event.getId())) {
-            if (status == Status.CONFIRMED && !request.getStatus().equals(Status.CONFIRMED)) {
+            if (status == Status.CONFIRMED && request.getStatus() != Status.CONFIRMED) {
                 if (event.getConfirmedRequests() < event.getParticipantLimit()) {
                     event.setConfirmedRequests(event.getConfirmedRequests() + 1);
                     eventRepository.save(event);
@@ -117,6 +123,7 @@ public class RequestServiceImpl implements RequestService {
     public ParticipationRequestDto cancelRequest(Long userId, Long reqId) {
        ParticipationRequest request = requestRepository.findById(reqId).orElseThrow(
                 () -> new ServerException("Запрос с таким ID отсутствует."));
+        log.info("Запрос отмены запроса на участие в мероприятии.");
         if (Objects.equals(userId, request.getRequester().getId())) {
             if (request.getStatus() == Status.CONFIRMED) {
                 Event event = request.getEvent();

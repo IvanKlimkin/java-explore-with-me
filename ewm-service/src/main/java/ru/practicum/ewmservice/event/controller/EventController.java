@@ -4,11 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewmservice.EwmPageRequest;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
 import ru.practicum.ewmservice.client.StatClient;
 import ru.practicum.ewmservice.client.dto.RequestDto;
 import ru.practicum.ewmservice.client.dto.ViewStats;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
+import ru.practicum.ewmservice.event.model.SortEvent;
 import ru.practicum.ewmservice.event.service.EventService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,14 +40,14 @@ public class EventController {
                                              @RequestParam(name = "onlyAvailable", required = false,
                                                      defaultValue = "false") Boolean onlyAvailable,
                                              @RequestParam(name = "sort", required = false, defaultValue = "VIEWS")
-                                             String sort,
+                                                 SortEvent sort,
                                              @PositiveOrZero @RequestParam(
                                                      name = "from", defaultValue = "0") Integer from,
                                              @Positive @RequestParam(
                                                      name = "size", defaultValue = "10") Integer size,
                                              HttpServletRequest httpServletRequest) {
         EwmPageRequest pageRequest;
-        if (sort.equals("EVENT_DATE")) {
+        if (sort == SortEvent.EVENT_DATE) {
             pageRequest = new EwmPageRequest(from, size, Sort.by("eventDate").descending());
         } else {
             pageRequest = new EwmPageRequest(from, size, Sort.by("views").descending());

@@ -3,10 +3,11 @@ package ru.practicum.ewmservice.event.service;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewmservice.EwmPageRequest;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
 import ru.practicum.ewmservice.category.model.Category;
 import ru.practicum.ewmservice.category.repository.CategoryRepository;
 import ru.practicum.ewmservice.event.dto.AdminUpdateEventRequest;
@@ -30,6 +31,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
@@ -43,6 +45,7 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getAllUserEvents(Long userId, EwmPageRequest pageRequest) {
         User initiator = userRepository.findById(userId).orElseThrow(
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
+        log.info("Запрос получения всех мероприятий пользователя.");
         return eventMapper.toShortDto(eventRepository.findAllByInitiator(initiator, pageRequest));
     }
 
@@ -53,6 +56,7 @@ public class EventServiceImpl implements EventService {
                 () -> new ServerException("Категория с таким ID отсутствует."));
         User initiator = userRepository.findById(userId).orElseThrow(
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
+        log.info("Запрос создания нового мероприятия.");
         locationRepository.save(eventDto.getLocation());
         return eventMapper.toFullDto(
                 eventRepository.save(
@@ -66,8 +70,9 @@ public class EventServiceImpl implements EventService {
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
         Event event = eventRepository.findById(updateEventDto.getEventId()).orElseThrow(
                 () -> new ServerException("Событие с таким eventID отсутствует."));
+        log.info("Обновление мероприятия.");
         if (event.getInitiator().getId().equals(initiator.getId())) {
-            if (!event.getState().equals(State.PUBLISHED)) {
+            if (event.getState() !=State.PUBLISHED) {
                 event.setAnnotation(updateEventDto.getAnnotation());
                 event.setCategory(categoryRepository.findById(updateEventDto.getCategory()).orElseThrow(
                         () -> new ServerException("Категория с таким ID отсутствует.")));
@@ -94,6 +99,7 @@ public class EventServiceImpl implements EventService {
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
         Event event = eventRepository.findById(eventId).orElseThrow(
                 () -> new ServerException("Событие с таким eventID отсутствует."));
+        log.info("Запрос получения мероприятия по Id.");
         if (event.getInitiator().getId().equals(initiator.getId())) {
             return eventMapper.toFullDto(event);
         } else {
@@ -105,6 +111,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getEventByIdToAll(Long eventId) {
         Event event = eventRepository.findById(eventId).orElseThrow(
                 () -> new ServerException("Событие с таким eventID отсутствует."));
+        log.info("Запрос получения опубликованного мероприятия по Id.");
         if (event.getState() != State.PUBLISHED) {
             throw new ServerException("Событие не опубликовано.");
         }
@@ -118,6 +125,7 @@ public class EventServiceImpl implements EventService {
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
         Event event = eventRepository.findById(eventId).orElseThrow(
                 () -> new ServerException("Событие с таким eventID отсутствует."));
+        log.info("Запрос на отклонение события");
         if (event.getInitiator().getId().equals(initiator.getId())) {
             if (event.getState().equals(State.PENDING)) {
                 event.setState(State.CANCELED);
@@ -137,7 +145,7 @@ public class EventServiceImpl implements EventService {
                                            LocalDateTime start,
                                            LocalDateTime end,
                                            EwmPageRequest pageRequest) {
-
+        log.info("Поиск события по параметрам запроса.");
         BooleanExpression result = null;
         BooleanExpression condition;
         if (users != null) {
@@ -175,7 +183,7 @@ public class EventServiceImpl implements EventService {
             LocalDateTime end,
             Boolean onlyAvailable,
             EwmPageRequest pageRequest) {
-
+        log.info("Запрос получения мероприятия с филтрацией по параметрам.");
         BooleanExpression result = null;
         BooleanExpression condition;
         result = QEvent.event.state.eq(State.PUBLISHED);
@@ -216,6 +224,7 @@ public class EventServiceImpl implements EventService {
                 () -> new ServerException("Событие с таким eventID отсутствует."));
         Category category = categoryRepository.findById(adminEvent.getCategory()).orElseThrow(
                 () -> new ServerException("Категория с таким ID отсутствует."));
+        log.info("Изменения события Админом");
         if (adminEvent.getAnnotation() != null) {
             event.setAnnotation(adminEvent.getAnnotation());
         }
@@ -252,6 +261,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto publishEvent(Long eventId) {
         Event event = eventRepository.findById(eventId).orElseThrow(
                 () -> new ServerException("Событие с таким eventID отсутствует."));
+        log.info("Публикация события");
         if (event.getState() == State.PENDING && event.getEventDate().isAfter(LocalDateTime.now().plusHours(1))) {
             event.setState(State.PUBLISHED);
             event.setPublishedOn(LocalDateTime.now());
@@ -266,6 +276,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto rejectEvent(Long eventId) {
         Event event = eventRepository.findById(eventId).orElseThrow(
                 () -> new ServerException("Событие с таким eventID отсутствует."));
+        log.info("Запрос на отказ в размещении мероприятия.");
         if (event.getState() != State.PUBLISHED) {
             event.setState(State.CANCELED);
             return eventMapper.toFullDto(eventRepository.save(event));

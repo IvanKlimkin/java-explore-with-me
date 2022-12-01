@@ -18,9 +18,15 @@ import java.util.List;
 public class ExceptionHandlerAdvice {
     @ExceptionHandler(ServerException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleServerException(ServerException e) {
+    public ApiError handleServerException(ServerException e) {
         log.error(e.getMessage(), e);
-        return e.getMessage();
+        ApiError error = new ApiError(
+                List.of(e.getStackTrace()),
+                e.getMessage(),
+                "Запрос к серверу не корректен.",
+                HttpStatus.NOT_FOUND,
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")));
+        return error;
     }
 
     @ExceptionHandler(NotUniqException.class)
