@@ -21,8 +21,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public List<CategoryDto> getAll(@PositiveOrZero @RequestParam(
-            name = "from", defaultValue = "0") Integer from,
+    public List<CategoryDto> getAll(@PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                     @Positive @RequestParam(
                                             name = "size", defaultValue = "10") Integer size) {
         final EwmPageRequest pageRequest = new EwmPageRequest(from, size, Sort.unsorted());
