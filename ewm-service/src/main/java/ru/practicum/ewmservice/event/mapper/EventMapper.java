@@ -42,7 +42,8 @@ public class EventMapper {
                 State.PENDING,
                 newEventDto.getTitle(),
                 0,
-                null
+                null,
+                (float) 0
         );
     }
 
@@ -84,7 +85,8 @@ public class EventMapper {
                 event.getRequestModeration(),
                 event.getState(),
                 event.getTitle(),
-                event.getViews());
+                event.getViews(),
+                event.getRating());
     }
 
     public List<EventFullDto> toFullDto(Iterable<Event> events) {

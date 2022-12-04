@@ -1,11 +1,11 @@
 package ru.practicum.ewmservice.event.service;
 
-import ru.practicum.ewmservice.utils.EwmPageRequest;
 import ru.practicum.ewmservice.event.dto.AdminUpdateEventRequest;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
 import ru.practicum.ewmservice.event.dto.EventShortDto;
 import ru.practicum.ewmservice.event.dto.NewEventDto;
 import ru.practicum.ewmservice.event.model.State;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +15,8 @@ public interface EventService {
     List<EventShortDto> getAllUserEvents(Long userId, EwmPageRequest pageRequest);
 
     EventFullDto createNewEvent(Long userId, NewEventDto eventDto);
+
+    EventFullDto rateEvent(Long userId, Long eventId, Float likeValue);
 
     EventFullDto updateEvent(Long userId, NewEventDto updateEventDto);
 

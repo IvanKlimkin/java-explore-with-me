@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewmservice.utils.EwmPageRequest;
 import ru.practicum.ewmservice.event.dto.AdminUpdateEventRequest;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
 import ru.practicum.ewmservice.event.model.State;
 import ru.practicum.ewmservice.event.service.EventService;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
 
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;

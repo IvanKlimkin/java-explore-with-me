@@ -68,5 +68,7 @@ public class Event {
     private Integer views;
     @Column(name = "compilation_id")
     private Long compilationId;
+    @Column(name = "rating", columnDefinition = "float default 0", nullable = false)
+    private Float rating;
 
 }

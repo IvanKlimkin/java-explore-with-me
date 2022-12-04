@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewmservice.utils.EwmPageRequest;
 import ru.practicum.ewmservice.compilation.dto.CompilationDto;
 import ru.practicum.ewmservice.compilation.dto.NewCompilationDto;
 import ru.practicum.ewmservice.compilation.mapper.CompilationMapper;
@@ -13,6 +12,7 @@ import ru.practicum.ewmservice.compilation.repository.CompilationRepository;
 import ru.practicum.ewmservice.event.model.Event;
 import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.exception.ServerException;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
 
 import java.util.List;
 

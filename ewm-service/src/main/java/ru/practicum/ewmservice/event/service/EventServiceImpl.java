@@ -1,5 +1,6 @@
 package ru.practicum.ewmservice.event.service;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import lombok.RequiredArgsConstructor;
@@ -7,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewmservice.utils.EwmPageRequest;
 import ru.practicum.ewmservice.category.model.Category;
 import ru.practicum.ewmservice.category.repository.CategoryRepository;
 import ru.practicum.ewmservice.event.dto.AdminUpdateEventRequest;
@@ -16,13 +16,16 @@ import ru.practicum.ewmservice.event.dto.EventShortDto;
 import ru.practicum.ewmservice.event.dto.NewEventDto;
 import ru.practicum.ewmservice.event.mapper.EventMapper;
 import ru.practicum.ewmservice.event.model.Event;
+import ru.practicum.ewmservice.event.model.EventLike;
 import ru.practicum.ewmservice.event.model.QEvent;
 import ru.practicum.ewmservice.event.model.State;
+import ru.practicum.ewmservice.event.repository.EventLikeRepository;
 import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.event.repository.LocationRepository;
 import ru.practicum.ewmservice.exception.ServerException;
 import ru.practicum.ewmservice.user.model.User;
 import ru.practicum.ewmservice.user.repository.UserRepository;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,6 +43,7 @@ public class EventServiceImpl implements EventService {
 
     private final LocationRepository locationRepository;
     private final CategoryRepository categoryRepository;
+    private final EventLikeRepository eventLikeRepository;
 
     @Override
     public List<EventShortDto> getAllUserEvents(Long userId, EwmPageRequest pageRequest) {
@@ -65,6 +69,30 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
+    public EventFullDto rateEvent(Long userId, Long eventId, Float likeValue) {
+        User liker = userRepository.findById(userId).orElseThrow(
+                () -> new ServerException("Пользователь с таким ID отсутствует."));
+        Event event = eventRepository.findById(eventId).orElseThrow(
+                () -> new ServerException("Событие с таким eventID отсутствует."));
+        if (event.getState() != State.PUBLISHED) {
+            throw new ServerException("Оценить можно только опубликованные события");
+        }
+        EventLike eventLike = eventLikeRepository.findByEventAndLiker(event, liker);
+        if (eventLike == null) {
+            eventLike = new EventLike(0L, liker, event, likeValue);
+        } else {
+            eventLike.setLikeValue(likeValue);
+        }
+        eventLikeRepository.save(eventLike);
+        Tuple likeInfo = eventLikeRepository.getEventLikesInfo(event);
+        if (likeInfo != null) {
+            event.setRating(likeInfo.get(0, Float.class) / likeInfo.get(1, Long.class));
+        }
+        return eventMapper.toFullDto(eventRepository.save(event));
+    }
+
+    @Override
+    @Transactional
     public EventFullDto updateEvent(Long userId, NewEventDto updateEventDto) {
         User initiator = userRepository.findById(userId).orElseThrow(
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
@@ -72,7 +100,7 @@ public class EventServiceImpl implements EventService {
                 () -> new ServerException("Событие с таким eventID отсутствует."));
         log.info("Обновление мероприятия.");
         if (event.getInitiator().getId().equals(initiator.getId())) {
-            if (event.getState() !=State.PUBLISHED) {
+            if (event.getState() != State.PUBLISHED) {
                 event.setAnnotation(updateEventDto.getAnnotation());
                 event.setCategory(categoryRepository.findById(updateEventDto.getCategory()).orElseThrow(
                         () -> new ServerException("Категория с таким ID отсутствует.")));

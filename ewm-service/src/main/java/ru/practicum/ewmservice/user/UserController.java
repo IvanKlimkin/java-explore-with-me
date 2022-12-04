@@ -4,10 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewmservice.utils.Create;
-import ru.practicum.ewmservice.utils.EwmPageRequest;
 import ru.practicum.ewmservice.user.dto.UserDto;
 import ru.practicum.ewmservice.user.service.UserService;
+import ru.practicum.ewmservice.utils.Create;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
 
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;

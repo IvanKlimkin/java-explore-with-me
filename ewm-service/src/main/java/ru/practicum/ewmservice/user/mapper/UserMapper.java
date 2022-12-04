@@ -14,14 +14,16 @@ public class UserMapper {
         return new User(
                 userDto.getId(),
                 userDto.getEmail(),
-                userDto.getName());
+                userDto.getName(),
+                0F);
     }
 
     public UserDto toDto(User user) {
         return new UserDto(
                 user.getId(),
                 user.getEmail(),
-                user.getName());
+                user.getName(),
+                user.getRating());
     }
 
     public List<UserDto> toDto(Iterable<User> users) {
