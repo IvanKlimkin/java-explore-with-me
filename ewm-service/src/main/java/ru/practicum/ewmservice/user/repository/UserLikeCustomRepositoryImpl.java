@@ -16,8 +16,6 @@ public class UserLikeCustomRepositoryImpl implements UserLikeCustomRepository {
     @PersistenceContext
     private final EntityManager em;
 
-    //private QRequestStat request = QRequestStat.requestStat;
-
     @Override
     public Tuple getUserRatedInfo(User user) {
         return new JPAQuery<>(em)

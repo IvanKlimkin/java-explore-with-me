@@ -43,14 +43,27 @@ public class UserEventController {
     }
 
     @PostMapping("/{eventId}/rate")
-    @PatchMapping("/{eventId}/rate")
     public EventFullDto rateEvent(@PathVariable Long userId,
                                   @PathVariable Long eventId,
                                   @Max(value = 5, message = "Maximum rate value is 5.")
                                   @Min(value = 0, message = "Rating should be positive")
-                                  @RequestParam(name = "rating") Float rateValue
-    ) {
+                                  @RequestParam(name = "rating") Float rateValue) {
         return eventService.rateEvent(userId, eventId, rateValue);
+    }
+
+    @PatchMapping("/{eventId}/rate")
+    public EventFullDto updateRateEvent(@PathVariable Long userId,
+                                        @PathVariable Long eventId,
+                                        @Max(value = 5, message = "Maximum rate value is 5.")
+                                        @Min(value = 0, message = "Rating should be positive")
+                                        @RequestParam(name = "rating") Float rateValue) {
+        return eventService.updateRateEvent(userId, eventId, rateValue);
+    }
+
+    @DeleteMapping("/{eventId}/rate")
+    public void updateRateEvent(@PathVariable Long userId,
+                                @PathVariable Long eventId) {
+        eventService.deleteRate(userId, eventId);
     }
 
     @PatchMapping

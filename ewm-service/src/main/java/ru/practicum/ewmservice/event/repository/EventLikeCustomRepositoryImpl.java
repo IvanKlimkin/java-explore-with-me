@@ -16,8 +16,6 @@ public class EventLikeCustomRepositoryImpl implements EventLikeCustomRepository 
     @PersistenceContext
     private final EntityManager em;
 
-    //private QRequestStat request = QRequestStat.requestStat;
-
     @Override
     public Tuple getEventLikesInfo(Event event) {
         return new JPAQuery<>(em)

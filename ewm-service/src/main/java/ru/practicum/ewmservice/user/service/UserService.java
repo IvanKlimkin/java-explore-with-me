@@ -17,4 +17,8 @@ public interface UserService {
 
     UserDto rateUser(Long userId, Long ratedId, Float rateValue);
 
+    UserDto updateRateUser(Long userId, Long ratedId, Float rateValue);
+
+    void deleteRate(Long userId, Long ratedId);
+
 }

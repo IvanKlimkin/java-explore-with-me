@@ -67,13 +67,49 @@ public class UserServiceImpl implements UserService {
         if (userLike == null) {
             userLike = new UserLike(0L, liker, ratedUser, rateValue);
         } else {
+            throw new ServerException("Можно обновить или удалить оценку пользователя.");
+        }
+        userLikeRepository.save(userLike);
+        return userMapper.toDto(userRepository.save(calculateRating(ratedUser)));
+    }
+
+    @Override
+    @Transactional
+    public UserDto updateRateUser(Long userId, Long ratedId, Float rateValue) {
+        log.info("Запрос обновления оценки пользователя.");
+        User liker = userRepository.findById(userId).orElseThrow(
+                () -> new ServerException("Пользователь с таким ID отсутствует."));
+        User ratedUser = userRepository.findById(ratedId).orElseThrow(
+                () -> new ServerException("Пользователь с таким ID отсутствует."));
+        UserLike userLike = userLikeRepository.findByLikerAndRatedUser(liker, ratedUser);
+        if (userLike == null) {
+            throw new ServerException("Такая оценка события отсутствует.");
+        } else {
             userLike.setLikeValue(rateValue);
         }
         userLikeRepository.save(userLike);
+        return userMapper.toDto(userRepository.save(calculateRating(ratedUser)));
+    }
+
+    private User calculateRating(User ratedUser) {
         Tuple likeInfo = userLikeRepository.getUserRatedInfo(ratedUser);
         if (likeInfo != null) {
             ratedUser.setRating(likeInfo.get(0, Float.class) / likeInfo.get(1, Long.class));
         }
-        return userMapper.toDto(userRepository.save(ratedUser));
+        return ratedUser;
+    }
+
+    @Override
+    @Transactional
+    public void deleteRate(Long userId, Long ratedId) {
+        log.info("Запрос удаления оценки пользователя.");
+        User liker = userRepository.findById(userId).orElseThrow(
+                () -> new ServerException("Пользователь с таким ID отсутствует."));
+        User ratedUser = userRepository.findById(ratedId).orElseThrow(
+                () -> new ServerException("Пользователь с таким ID отсутствует."));
+        UserLike likeToDelete = userLikeRepository.findByLikerAndRatedUser(liker, ratedUser);
+        if (likeToDelete != null) {
+            userLikeRepository.delete(likeToDelete);
+        }
     }
 }

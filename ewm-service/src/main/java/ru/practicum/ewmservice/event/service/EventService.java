@@ -20,6 +20,10 @@ public interface EventService {
 
     EventFullDto updateEvent(Long userId, NewEventDto updateEventDto);
 
+    EventFullDto updateRateEvent(Long userId, Long eventId, Float rateValue);
+
+    void deleteRate(Long userId, Long eventId);
+
     EventFullDto getEventById(Long userId, Long eventId);
 
     EventFullDto getEventByIdToAll(Long userId);

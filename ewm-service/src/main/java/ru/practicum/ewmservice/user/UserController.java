@@ -22,11 +22,17 @@ public class UserController {
 
     @GetMapping
     public List<UserDto> getAll(@RequestParam(name = "ids", required = false) List<Long> ids,
+                                @RequestParam(name = "sort", required = false, defaultValue = "UNSORTED") String sort,
                                 @PositiveOrZero @RequestParam(
                                         name = "from", defaultValue = "0") Integer from,
                                 @Positive @RequestParam(
                                         name = "size", defaultValue = "10") Integer size) {
-        final EwmPageRequest pageRequest = new EwmPageRequest(from, size, Sort.unsorted());
+        EwmPageRequest pageRequest;
+        if (sort.equals("RATING")) {
+            pageRequest = new EwmPageRequest(from, size, Sort.by("rating").descending());
+        } else {
+            pageRequest = new EwmPageRequest(from, size, Sort.unsorted());
+        }
         return userService.getAllUsersInList(ids, pageRequest);
     }
 
