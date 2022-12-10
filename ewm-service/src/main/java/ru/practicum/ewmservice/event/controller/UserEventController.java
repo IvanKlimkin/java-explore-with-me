@@ -46,7 +46,7 @@ public class UserEventController {
     public EventFullDto rateEvent(@PathVariable Long userId,
                                   @PathVariable Long eventId,
                                   @Max(value = 5, message = "Maximum rate value is 5.")
-                                  @Min(value = 0, message = "Rating should be positive")
+                                  @Min(value = 0, message = "Rating should be positive.")
                                   @RequestParam(name = "rating") Float rateValue) {
         return eventService.rateEvent(userId, eventId, rateValue);
     }
@@ -55,7 +55,7 @@ public class UserEventController {
     public EventFullDto updateRateEvent(@PathVariable Long userId,
                                         @PathVariable Long eventId,
                                         @Max(value = 5, message = "Maximum rate value is 5.")
-                                        @Min(value = 0, message = "Rating should be positive")
+                                        @Min(value = 0, message = "Rating should be positive.")
                                         @RequestParam(name = "rating") Float rateValue) {
         return eventService.updateRateEvent(userId, eventId, rateValue);
     }

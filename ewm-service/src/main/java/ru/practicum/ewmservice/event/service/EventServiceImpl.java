@@ -60,7 +60,7 @@ public class EventServiceImpl implements EventService {
                 () -> new ServerException("Категория с таким ID отсутствует."));
         User initiator = userRepository.findById(userId).orElseThrow(
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
-        log.info("Запрос создания нового мероприятия.");
+        log.info("Create new event request");
         locationRepository.save(eventDto.getLocation());
         return eventMapper.toFullDto(
                 eventRepository.save(
@@ -70,19 +70,19 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto rateEvent(Long userId, Long eventId, Float likeValue) {
-        log.info("Запрос создания оценки мероприятия.");
+        log.info("Rate event request");
         User liker = userRepository.findById(userId).orElseThrow(
-                () -> new ServerException("Пользователь с таким ID отсутствует."));
+                () -> new ServerException("Wrong user Id."));
         Event event = eventRepository.findById(eventId).orElseThrow(
-                () -> new ServerException("Событие с таким eventID отсутствует."));
+                () -> new ServerException("Wrong event Id."));
         if (event.getState() != State.PUBLISHED) {
-            throw new ServerException("Оценить можно только опубликованные события");
+            throw new ServerException("Only published events available to rate.");
         }
         EventLike eventLike = eventLikeRepository.findByEventAndLiker(event, liker);
         if (eventLike == null) {
             eventLike = new EventLike(0L, liker, event, likeValue);
         } else {
-            throw new ServerException("Можно обновить или удалить оценку события.");
+            throw new ServerException("Rate from such user exist? try PATCH or DELETE request");
         }
         eventLikeRepository.save(eventLike);
         return eventMapper.toFullDto(eventRepository.save(calculateRating(event)));
@@ -91,14 +91,14 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto updateRateEvent(Long userId, Long eventId, Float rateValue) {
-        log.info("Запрос обновления оценки мероприятия.");
+        log.info("Update rate value request");
         User liker = userRepository.findById(userId).orElseThrow(
-                () -> new ServerException("Пользователь с таким ID отсутствует."));
+                () -> new ServerException("Wrong user Id."));
         Event event = eventRepository.findById(eventId).orElseThrow(
-                () -> new ServerException("Событие с таким eventID отсутствует."));
+                () -> new ServerException("Wrong event Id."));
         EventLike eventLike = eventLikeRepository.findByEventAndLiker(event, liker);
         if (eventLike == null) {
-            throw new ServerException("Такая оценка события отсутствует.");
+            throw new ServerException("Rate of such event doesn't exist.");
         } else {
             eventLike.setLikeValue(rateValue);
         }
@@ -108,11 +108,11 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public void deleteRate(Long userId, Long eventId) {
-        log.info("Запрос удаления оценки мероприятия.");
+        log.info("Delete event rate request");
         User liker = userRepository.findById(userId).orElseThrow(
-                () -> new ServerException("Пользователь с таким ID отсутствует."));
+                () -> new ServerException("Wrong user Id."));
         Event event = eventRepository.findById(eventId).orElseThrow(
-                () -> new ServerException("Событие с таким eventID отсутствует."));
+                () -> new ServerException("Wrong event Id."));
 
         EventLike likeToDelete = eventLikeRepository.findByEventAndLiker(event, liker);
         if (likeToDelete != null) {
@@ -249,7 +249,7 @@ public class EventServiceImpl implements EventService {
             LocalDateTime end,
             Boolean onlyAvailable,
             EwmPageRequest pageRequest) {
-        log.info("Запрос получения мероприятия с фильтрацией по параметрам.");
+        log.info("Get events filtered by parameter.");
         BooleanExpression result = null;
         BooleanExpression condition;
         result = QEvent.event.state.eq(State.PUBLISHED);
