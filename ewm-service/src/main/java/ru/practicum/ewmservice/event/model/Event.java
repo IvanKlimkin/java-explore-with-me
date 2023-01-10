@@ -2,10 +2,12 @@ package ru.practicum.ewmservice.event.model;
 
 import lombok.*;
 import ru.practicum.ewmservice.category.model.Category;
+import ru.practicum.ewmservice.compilation.model.Compilation;
 import ru.practicum.ewmservice.user.model.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,7 +20,7 @@ public class Event {
     @Column(name = "annotation", nullable = false, length = 1024)
     private String annotation;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
@@ -38,11 +40,11 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "initiator_id", nullable = false)
     private User initiator;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id", nullable = false)
     private Location location;
 
@@ -66,9 +68,24 @@ public class Event {
 
     @Column(name = "views", columnDefinition = "bigint default 0", nullable = false)
     private Integer views;
-    @Column(name = "compilation_id")
-    private Long compilationId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Compilation compilation;
     @Column(name = "rating", columnDefinition = "float default 0", nullable = false)
     private Float rating;
+    @Column(name = "version")
+    @Version
+    private int version;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Event event = (Event) o;
+        return Objects.equals(id, event.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

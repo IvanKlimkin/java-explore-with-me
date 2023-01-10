@@ -48,9 +48,7 @@ public class CompilationServiceImpl implements CompilationService {
                 () -> new ServerException("Подборка с таким ID отсутствует."));
         Event event = eventRepository.findById(eventId).orElseThrow(
                 () -> new ServerException("Событие с таким eventID отсутствует."));
-        List<Event> compEvents = compilation.getEvents();
-        compEvents.add(event);
-        compilation.setEvents(compEvents);
+        compilation.addEvent(event);
         log.info("Добавление события в подборку");
         compilationRepository.save(compilation);
     }
@@ -62,9 +60,7 @@ public class CompilationServiceImpl implements CompilationService {
                 () -> new ServerException("Подборка с таким ID отсутствует."));
         Event event = eventRepository.findById(eventId).orElseThrow(
                 () -> new ServerException("Событие с таким eventID отсутствует."));
-        List<Event> compEvents = compilation.getEvents();
-        compEvents.remove(event);
-        compilation.setEvents(compEvents);
+        compilation.removeEvent(event);
         log.info("Удаление события из подборки");
         compilationRepository.save(compilation);
     }

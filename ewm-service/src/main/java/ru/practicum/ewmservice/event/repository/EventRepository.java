@@ -10,7 +10,8 @@ import ru.practicum.ewmservice.utils.EwmPageRequest;
 import java.util.List;
 
 
-public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPredicateExecutor<Event> {
+public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPredicateExecutor<Event>,
+        EventCustomRepository {
 
     List<Event> findAllByInitiator(User initiator, EwmPageRequest pageRequest);
 

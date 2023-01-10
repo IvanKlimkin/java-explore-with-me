@@ -54,12 +54,13 @@ public class EventController {
         } else {
             pageRequest = new EwmPageRequest(from, size, Sort.by("views").descending());
         }
+        EventFilterParams filterParams = new EventFilterParams(text, categories, paid, start, end, onlyAvailable, sort);
         statClient.saveRequest(new RequestDto(null, "ewm-service", httpServletRequest.getRequestURI(),
                 httpServletRequest.getRemoteAddr(), LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
 
         return eventService.getFilteredEvents(
-                text, categories, paid, start, end, onlyAvailable, pageRequest);
+                filterParams, pageRequest);
     }
 
     @GetMapping("/{eventId}")

@@ -61,7 +61,7 @@ public class UserEventController {
     }
 
     @DeleteMapping("/{eventId}/rate")
-    public void updateRateEvent(@PathVariable Long userId,
+    public void deleteRateEvent(@PathVariable Long userId,
                                 @PathVariable Long eventId) {
         eventService.deleteRate(userId, eventId);
     }

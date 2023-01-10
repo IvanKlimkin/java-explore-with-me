@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS events
     views              BIGINT  DEFAULT 0                       NOT NULL,
     compilation_id     BIGINT,
     rating             FLOAT   DEFAULT 0                       NOT NULL,
+    version            BIGINT,
     CONSTRAINT pk_event PRIMARY KEY (id),
     CONSTRAINT fk_event_category
         FOREIGN KEY (category_id) REFERENCES categories ON DELETE CASCADE,

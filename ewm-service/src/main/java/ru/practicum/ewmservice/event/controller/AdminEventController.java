@@ -34,7 +34,8 @@ public class AdminEventController {
                                            @Positive @RequestParam(
                                                    name = "size", defaultValue = "10") Integer size) {
         final EwmPageRequest pageRequest = new EwmPageRequest(from, size, Sort.unsorted());
-        return eventService.searchEvents(users, states, categories, start, end, pageRequest);
+        final EventSearchParams params = new EventSearchParams(users, states, categories, start, end);
+        return eventService.searchEvents(params, pageRequest);
     }
 
     @PutMapping("/{eventId}")

@@ -2,7 +2,6 @@ package ru.practicum.ewmservice.event.service;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -10,15 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.category.model.Category;
 import ru.practicum.ewmservice.category.repository.CategoryRepository;
+import ru.practicum.ewmservice.event.controller.EventFilterParams;
+import ru.practicum.ewmservice.event.controller.EventSearchParams;
 import ru.practicum.ewmservice.event.dto.AdminUpdateEventRequest;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
 import ru.practicum.ewmservice.event.dto.EventShortDto;
 import ru.practicum.ewmservice.event.dto.NewEventDto;
 import ru.practicum.ewmservice.event.mapper.EventMapper;
-import ru.practicum.ewmservice.event.model.Event;
-import ru.practicum.ewmservice.event.model.EventLike;
-import ru.practicum.ewmservice.event.model.QEvent;
-import ru.practicum.ewmservice.event.model.State;
+import ru.practicum.ewmservice.event.model.*;
 import ru.practicum.ewmservice.event.repository.EventLikeRepository;
 import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.event.repository.LocationRepository;
@@ -61,10 +59,11 @@ public class EventServiceImpl implements EventService {
         User initiator = userRepository.findById(userId).orElseThrow(
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
         log.info("Create new event request");
-        locationRepository.save(eventDto.getLocation());
+        Location location = locationRepository.save(
+                new Location(0L, eventDto.getLocation().getLat(), eventDto.getLocation().getLon()));
         return eventMapper.toFullDto(
                 eventRepository.save(
-                        eventMapper.toEvent(eventDto, category, initiator)));
+                        eventMapper.toEvent(eventDto, category, initiator, location)));
     }
 
     @Override
@@ -205,35 +204,37 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventFullDto> searchEvents(List<Long> users,
-                                           List<State> states,
-                                           List<Long> categories,
-                                           LocalDateTime start,
-                                           LocalDateTime end,
+    public List<EventFullDto> searchEvents(EventSearchParams params,
                                            EwmPageRequest pageRequest) {
-        log.info("Поиск события по параметрам запроса.");
-        BooleanExpression result = null;
-        BooleanExpression condition;
-        if (users != null) {
-            condition = QEvent.event.initiator.id.in(users);
-            result = condition;
+        log.info("Search events by request parameters.");
+        QEvent event = QEvent.event;
+        BooleanExpression paramsPredicate = null;
+        if (!params.getUsers().contains(0L)) {
+            paramsPredicate = event.initiator.id.in(params.getUsers());
         }
-        if (states != null) {
-            condition = QEvent.event.state.in(states);
-            result = result == null ? condition : result.and(condition);
+        if (!params.getCategories().contains(0L)) {
+            if (paramsPredicate == null) {
+                paramsPredicate = event.category.id.in(params.getCategories());
+            } else {
+                paramsPredicate.and(event.category.id.in(params.getCategories()));
+            }
         }
-        if (categories != null) {
-            condition = QEvent.event.category.id.in(categories);
-            result = result == null ? condition : result.and(condition);
+        if (params.getStates() != null) {
+            if (paramsPredicate == null) {
+                paramsPredicate = event.state.in(params.getStates());
+            } else {
+                paramsPredicate.and(event.state.in(params.getStates()));
+            }
         }
-        if ((start != null || end != null)) {
-            condition = QEvent.event.eventDate.between(start, end);
-            result = result == null ? condition : result.and(condition);
+        if (params.getStart() != null && params.getEnd() != null) {
+            if (paramsPredicate == null) {
+                paramsPredicate = event.eventDate.between(params.getStart(), params.getEnd());
+            } else {
+                paramsPredicate.and(event.eventDate.between(params.getStart(), params.getEnd()));
+            }
         }
-        if (result == null) {
-            result = Expressions.asBoolean(true).isTrue();
-        }
-        Page<Event> foundEvents = eventRepository.findAll(result, pageRequest);
+
+        Page<Event> foundEvents = eventRepository.searchEvents(paramsPredicate, pageRequest);
         if (foundEvents != null) {
             return eventMapper.toFullDto(foundEvents.getContent());
         }
@@ -241,42 +242,36 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventFullDto> getFilteredEvents(
-            String text,
-            List<Long> categories,
-            Boolean paid,
-            LocalDateTime start,
-            LocalDateTime end,
-            Boolean onlyAvailable,
-            EwmPageRequest pageRequest) {
+    public List<EventFullDto> getFilteredEvents(EventFilterParams filterParams, EwmPageRequest pageRequest) {
         log.info("Get events filtered by parameter.");
+        QEvent event = QEvent.event;
         BooleanExpression result = null;
         BooleanExpression condition;
-        result = QEvent.event.state.eq(State.PUBLISHED);
-        if (text != null) {
-            condition = QEvent.event.annotation.toLowerCase().contains(text.toLowerCase())
-                    .or(QEvent.event.description.toLowerCase().contains(text.toLowerCase()));
+        result = event.state.eq(State.PUBLISHED);
+        if (filterParams.getText() != null) {
+            condition = event.annotation.toLowerCase().contains(filterParams.getText().toLowerCase())
+                    .or(event.description.toLowerCase().contains(filterParams.getText().toLowerCase()));
             result = result == null ? condition : result.and(condition);
         }
-        if (categories != null) {
-            condition = QEvent.event.category.id.in(categories);
+        if (filterParams.getCategories() != null) {
+            condition = event.category.id.in(filterParams.getCategories());
             result = result == null ? condition : result.and(condition);
         }
-        if (paid != null) {
-            condition = QEvent.event.paid.eq(paid);
+        if (filterParams.getPaid() != null) {
+            condition = event.paid.eq(filterParams.getPaid());
             result = result == null ? condition : result.and(condition);
         }
-        if (start != null && end != null) {
-            condition = QEvent.event.eventDate.between(start, end);
+        if (filterParams.getStart() != null && filterParams.getEnd() != null) {
+            condition = event.eventDate.between(filterParams.getStart(), filterParams.getEnd());
         } else {
-            condition = QEvent.event.eventDate.after(LocalDateTime.now());
+            condition = event.eventDate.after(LocalDateTime.now());
         }
         result = result == null ? condition : result.and(condition);
-        if (!onlyAvailable.equals(false)) {
-            condition = QEvent.event.confirmedRequests.lt(QEvent.event.participantLimit);
+        if (!filterParams.getOnlyAvailable().equals(false)) {
+            condition = event.confirmedRequests.lt(event.participantLimit);
             result = result == null ? condition : result.and(condition);
         }
-        Page<Event> foundEvents = eventRepository.findAll(result, pageRequest);
+        Page<Event> foundEvents = eventRepository.getFilteredEvents(result, pageRequest);
         if (foundEvents != null) {
             return eventMapper.toFullDto(foundEvents.getContent());
         }

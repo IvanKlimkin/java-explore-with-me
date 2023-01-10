@@ -1,13 +1,13 @@
 package ru.practicum.ewmservice.event.service;
 
+import ru.practicum.ewmservice.event.controller.EventFilterParams;
+import ru.practicum.ewmservice.event.controller.EventSearchParams;
 import ru.practicum.ewmservice.event.dto.AdminUpdateEventRequest;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
 import ru.practicum.ewmservice.event.dto.EventShortDto;
 import ru.practicum.ewmservice.event.dto.NewEventDto;
-import ru.practicum.ewmservice.event.model.State;
 import ru.practicum.ewmservice.utils.EwmPageRequest;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface EventService {
@@ -31,20 +31,11 @@ public interface EventService {
     EventFullDto rejectEventById(Long userId, Long eventId);
 
     List<EventFullDto> searchEvents(
-            List<Long> users,
-            List<State> states,
-            List<Long> categories,
-            LocalDateTime start,
-            LocalDateTime end,
+            EventSearchParams prams,
             EwmPageRequest pageRequest);
 
     List<EventFullDto> getFilteredEvents(
-            String text,
-            List<Long> categories,
-            Boolean paid,
-            LocalDateTime start,
-            LocalDateTime end,
-            Boolean onlyAvailable,
+            EventFilterParams filterParams,
             EwmPageRequest pageRequest);
 
     EventFullDto updateEventByAdmin(Long eventId, AdminUpdateEventRequest adminEvent);
