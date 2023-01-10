@@ -19,4 +19,6 @@ public class User {
     private String email;
     @Column(name = "name", nullable = false, length = 255)
     private String name;
+    @Column(name = "rating", columnDefinition = "float default 0", nullable = false)
+    private Float rating;
 }

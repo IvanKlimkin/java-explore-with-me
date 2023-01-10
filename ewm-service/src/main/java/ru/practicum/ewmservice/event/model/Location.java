@@ -3,6 +3,7 @@ package ru.practicum.ewmservice.event.model;
 import lombok.*;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -11,7 +12,7 @@ import javax.persistence.*;
 @ToString
 @Entity
 @Table(name = "locations")
-public class Location {
+public class Location implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

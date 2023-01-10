@@ -22,7 +22,16 @@ public class Compilation {
     private Boolean pinned;
     @Column(name = "title", nullable = false, length = 512)
     private String title;
-    @OneToMany
-    @JoinColumn(name = "compilation_id")
+    @OneToMany(mappedBy = "compilation")
     private List<Event> events = new ArrayList<>();
+
+    public void addEvent(Event event) {
+        events.add(event);
+        event.setCompilation(this);
+    }
+
+    public void removeEvent(Event event) {
+        events.remove(event);
+        event.setCompilation(null);
+    }
 }

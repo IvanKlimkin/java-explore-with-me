@@ -121,7 +121,7 @@ public class RequestServiceImpl implements RequestService {
     @Override
     @Transactional
     public ParticipationRequestDto cancelRequest(Long userId, Long reqId) {
-       ParticipationRequest request = requestRepository.findById(reqId).orElseThrow(
+        ParticipationRequest request = requestRepository.findById(reqId).orElseThrow(
                 () -> new ServerException("Запрос с таким ID отсутствует."));
         log.info("Запрос отмены запроса на участие в мероприятии.");
         if (Objects.equals(userId, request.getRequester().getId())) {
