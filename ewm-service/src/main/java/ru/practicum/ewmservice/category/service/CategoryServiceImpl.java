@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewmservice.utils.EwmPageRequest;
 import ru.practicum.ewmservice.category.dto.CategoryDto;
 import ru.practicum.ewmservice.category.mapper.CategoryMapper;
 import ru.practicum.ewmservice.category.repository.CategoryRepository;
 import ru.practicum.ewmservice.exception.ServerException;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
 
 import java.util.List;
 

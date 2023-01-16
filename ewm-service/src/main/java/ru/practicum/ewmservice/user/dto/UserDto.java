@@ -19,4 +19,5 @@ public class UserDto {
     private String email;
     @NotBlank(groups = {Create.class})
     private String name;
+    private Float rating;
 }

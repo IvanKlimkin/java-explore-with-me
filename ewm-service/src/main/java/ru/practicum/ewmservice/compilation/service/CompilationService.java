@@ -1,8 +1,8 @@
 package ru.practicum.ewmservice.compilation.service;
 
-import ru.practicum.ewmservice.utils.EwmPageRequest;
 import ru.practicum.ewmservice.compilation.dto.CompilationDto;
 import ru.practicum.ewmservice.compilation.dto.NewCompilationDto;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
 
 import java.util.List;
 

@@ -2,11 +2,10 @@ package ru.practicum.ewmservice.event.dto;
 
 
 import lombok.*;
-import ru.practicum.ewmservice.utils.Create;
 import ru.practicum.ewmservice.category.dto.CategoryDto;
-import ru.practicum.ewmservice.event.model.Location;
 import ru.practicum.ewmservice.event.model.State;
 import ru.practicum.ewmservice.user.dto.UserDto;
+import ru.practicum.ewmservice.utils.Create;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -38,7 +37,7 @@ public class EventFullDto {
     private UserDto initiator;
 
     @NotNull(groups = {Create.class})
-    private Location location;
+    private LocationDto location;
 
     @NotNull(groups = {Create.class})
     private Boolean paid;
@@ -55,4 +54,5 @@ public class EventFullDto {
     private String title;
 
     private Integer views;
+    private Float rating;
 }

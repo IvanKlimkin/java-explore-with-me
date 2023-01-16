@@ -4,26 +4,28 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewmservice.utils.Create;
-import ru.practicum.ewmservice.utils.EwmPageRequest;
-import ru.practicum.ewmservice.utils.Update;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
 import ru.practicum.ewmservice.event.dto.EventShortDto;
 import ru.practicum.ewmservice.event.dto.NewEventDto;
 import ru.practicum.ewmservice.event.service.EventService;
+import ru.practicum.ewmservice.utils.Create;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
+import ru.practicum.ewmservice.utils.Update;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "/users")
+@RequestMapping(path = "/users/{userId}/events")
 @RequiredArgsConstructor
 @Validated
 public class UserEventController {
     private final EventService eventService;
 
-    @GetMapping("/{userId}/events")
+    @GetMapping
     public List<EventShortDto> getAllUserEvents(@PathVariable Long userId,
                                                 @PositiveOrZero @RequestParam(
                                                         name = "from", defaultValue = "0") Integer from,
@@ -34,24 +36,48 @@ public class UserEventController {
     }
 
 
-    @PostMapping("/{userId}/events")
+    @PostMapping
     public EventFullDto add(@PathVariable Long userId,
                             @Validated({Create.class}) @RequestBody NewEventDto newEventDto) {
         return eventService.createNewEvent(userId, newEventDto);
     }
 
-    @PatchMapping("/{userId}/events")
+    @PostMapping("/{eventId}/rate")
+    public EventFullDto rateEvent(@PathVariable Long userId,
+                                  @PathVariable Long eventId,
+                                  @Max(value = 5, message = "Maximum rate value is 5.")
+                                  @Min(value = 0, message = "Rating should be positive.")
+                                  @RequestParam(name = "rating") Float rateValue) {
+        return eventService.rateEvent(userId, eventId, rateValue);
+    }
+
+    @PatchMapping("/{eventId}/rate")
+    public EventFullDto updateRateEvent(@PathVariable Long userId,
+                                        @PathVariable Long eventId,
+                                        @Max(value = 5, message = "Maximum rate value is 5.")
+                                        @Min(value = 0, message = "Rating should be positive.")
+                                        @RequestParam(name = "rating") Float rateValue) {
+        return eventService.updateRateEvent(userId, eventId, rateValue);
+    }
+
+    @DeleteMapping("/{eventId}/rate")
+    public void deleteRateEvent(@PathVariable Long userId,
+                                @PathVariable Long eventId) {
+        eventService.deleteRate(userId, eventId);
+    }
+
+    @PatchMapping
     public EventFullDto update(@PathVariable Long userId,
                                @Validated({Update.class}) @RequestBody NewEventDto updateEventDto) {
         return eventService.updateEvent(userId, updateEventDto);
     }
 
-    @GetMapping("/{userId}/events/{eventId}")
+    @GetMapping("/{eventId}")
     public EventFullDto getEventById(@PathVariable Long userId, @PathVariable Long eventId) {
         return eventService.getEventById(userId, eventId);
     }
 
-    @PatchMapping("/{userId}/events/{eventId}")
+    @PatchMapping("/{eventId}")
     public EventFullDto rejectEventById(@PathVariable Long userId, @PathVariable Long eventId) {
         return eventService.rejectEventById(userId, eventId);
     }

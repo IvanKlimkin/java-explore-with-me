@@ -1,28 +1,29 @@
 package ru.practicum.ewmservice.event.service;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewmservice.utils.EwmPageRequest;
 import ru.practicum.ewmservice.category.model.Category;
 import ru.practicum.ewmservice.category.repository.CategoryRepository;
+import ru.practicum.ewmservice.event.controller.EventFilterParams;
+import ru.practicum.ewmservice.event.controller.EventSearchParams;
 import ru.practicum.ewmservice.event.dto.AdminUpdateEventRequest;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
 import ru.practicum.ewmservice.event.dto.EventShortDto;
 import ru.practicum.ewmservice.event.dto.NewEventDto;
 import ru.practicum.ewmservice.event.mapper.EventMapper;
-import ru.practicum.ewmservice.event.model.Event;
-import ru.practicum.ewmservice.event.model.QEvent;
-import ru.practicum.ewmservice.event.model.State;
+import ru.practicum.ewmservice.event.model.*;
+import ru.practicum.ewmservice.event.repository.EventLikeRepository;
 import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.event.repository.LocationRepository;
 import ru.practicum.ewmservice.exception.ServerException;
 import ru.practicum.ewmservice.user.model.User;
 import ru.practicum.ewmservice.user.repository.UserRepository;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,6 +41,7 @@ public class EventServiceImpl implements EventService {
 
     private final LocationRepository locationRepository;
     private final CategoryRepository categoryRepository;
+    private final EventLikeRepository eventLikeRepository;
 
     @Override
     public List<EventShortDto> getAllUserEvents(Long userId, EwmPageRequest pageRequest) {
@@ -56,11 +58,73 @@ public class EventServiceImpl implements EventService {
                 () -> new ServerException("Категория с таким ID отсутствует."));
         User initiator = userRepository.findById(userId).orElseThrow(
                 () -> new ServerException("Пользователь с таким ID отсутствует."));
-        log.info("Запрос создания нового мероприятия.");
-        locationRepository.save(eventDto.getLocation());
+        log.info("Create new event request");
+        Location location = locationRepository.save(
+                new Location(0L, eventDto.getLocation().getLat(), eventDto.getLocation().getLon()));
         return eventMapper.toFullDto(
                 eventRepository.save(
-                        eventMapper.toEvent(eventDto, category, initiator)));
+                        eventMapper.toEvent(eventDto, category, initiator, location)));
+    }
+
+    @Override
+    @Transactional
+    public EventFullDto rateEvent(Long userId, Long eventId, Float likeValue) {
+        log.info("Rate event request");
+        User liker = userRepository.findById(userId).orElseThrow(
+                () -> new ServerException("Wrong user Id."));
+        Event event = eventRepository.findById(eventId).orElseThrow(
+                () -> new ServerException("Wrong event Id."));
+        if (event.getState() != State.PUBLISHED) {
+            throw new ServerException("Only published events available to rate.");
+        }
+        EventLike eventLike = eventLikeRepository.findByEventAndLiker(event, liker);
+        if (eventLike == null) {
+            eventLike = new EventLike(0L, liker, event, likeValue);
+        } else {
+            throw new ServerException("Rate from such user exist? try PATCH or DELETE request");
+        }
+        eventLikeRepository.save(eventLike);
+        return eventMapper.toFullDto(eventRepository.save(calculateRating(event)));
+    }
+
+    @Override
+    @Transactional
+    public EventFullDto updateRateEvent(Long userId, Long eventId, Float rateValue) {
+        log.info("Update rate value request");
+        User liker = userRepository.findById(userId).orElseThrow(
+                () -> new ServerException("Wrong user Id."));
+        Event event = eventRepository.findById(eventId).orElseThrow(
+                () -> new ServerException("Wrong event Id."));
+        EventLike eventLike = eventLikeRepository.findByEventAndLiker(event, liker);
+        if (eventLike == null) {
+            throw new ServerException("Rate of such event doesn't exist.");
+        } else {
+            eventLike.setLikeValue(rateValue);
+        }
+        return eventMapper.toFullDto(eventRepository.save(calculateRating(event)));
+    }
+
+    @Override
+    @Transactional
+    public void deleteRate(Long userId, Long eventId) {
+        log.info("Delete event rate request");
+        User liker = userRepository.findById(userId).orElseThrow(
+                () -> new ServerException("Wrong user Id."));
+        Event event = eventRepository.findById(eventId).orElseThrow(
+                () -> new ServerException("Wrong event Id."));
+
+        EventLike likeToDelete = eventLikeRepository.findByEventAndLiker(event, liker);
+        if (likeToDelete != null) {
+            eventLikeRepository.delete(likeToDelete);
+        }
+    }
+
+    private Event calculateRating(Event event) {
+        Tuple likeInfo = eventLikeRepository.getEventLikesInfo(event);
+        if (likeInfo != null) {
+            event.setRating(likeInfo.get(0, Float.class) / likeInfo.get(1, Long.class));
+        }
+        return event;
     }
 
     @Override
@@ -72,7 +136,7 @@ public class EventServiceImpl implements EventService {
                 () -> new ServerException("Событие с таким eventID отсутствует."));
         log.info("Обновление мероприятия.");
         if (event.getInitiator().getId().equals(initiator.getId())) {
-            if (event.getState() !=State.PUBLISHED) {
+            if (event.getState() != State.PUBLISHED) {
                 event.setAnnotation(updateEventDto.getAnnotation());
                 event.setCategory(categoryRepository.findById(updateEventDto.getCategory()).orElseThrow(
                         () -> new ServerException("Категория с таким ID отсутствует.")));
@@ -92,6 +156,7 @@ public class EventServiceImpl implements EventService {
         }
         return eventMapper.toFullDto(eventRepository.save(event));
     }
+
 
     @Override
     public EventFullDto getEventById(Long userId, Long eventId) {
@@ -139,35 +204,37 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventFullDto> searchEvents(List<Long> users,
-                                           List<State> states,
-                                           List<Long> categories,
-                                           LocalDateTime start,
-                                           LocalDateTime end,
+    public List<EventFullDto> searchEvents(EventSearchParams params,
                                            EwmPageRequest pageRequest) {
-        log.info("Поиск события по параметрам запроса.");
-        BooleanExpression result = null;
-        BooleanExpression condition;
-        if (users != null) {
-            condition = QEvent.event.initiator.id.in(users);
-            result = condition;
+        log.info("Search events by request parameters.");
+        QEvent event = QEvent.event;
+        BooleanExpression paramsPredicate = null;
+        if (!params.getUsers().contains(0L)) {
+            paramsPredicate = event.initiator.id.in(params.getUsers());
         }
-        if (states != null) {
-            condition = QEvent.event.state.in(states);
-            result = result == null ? condition : result.and(condition);
+        if (!params.getCategories().contains(0L)) {
+            if (paramsPredicate == null) {
+                paramsPredicate = event.category.id.in(params.getCategories());
+            } else {
+                paramsPredicate.and(event.category.id.in(params.getCategories()));
+            }
         }
-        if (categories != null) {
-            condition = QEvent.event.category.id.in(categories);
-            result = result == null ? condition : result.and(condition);
+        if (params.getStates() != null) {
+            if (paramsPredicate == null) {
+                paramsPredicate = event.state.in(params.getStates());
+            } else {
+                paramsPredicate.and(event.state.in(params.getStates()));
+            }
         }
-        if ((start != null || end != null)) {
-            condition = QEvent.event.eventDate.between(start, end);
-            result = result == null ? condition : result.and(condition);
+        if (params.getStart() != null && params.getEnd() != null) {
+            if (paramsPredicate == null) {
+                paramsPredicate = event.eventDate.between(params.getStart(), params.getEnd());
+            } else {
+                paramsPredicate.and(event.eventDate.between(params.getStart(), params.getEnd()));
+            }
         }
-        if (result == null) {
-            result = Expressions.asBoolean(true).isTrue();
-        }
-        Page<Event> foundEvents = eventRepository.findAll(result, pageRequest);
+
+        Page<Event> foundEvents = eventRepository.searchEvents(paramsPredicate, pageRequest);
         if (foundEvents != null) {
             return eventMapper.toFullDto(foundEvents.getContent());
         }
@@ -175,42 +242,36 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventFullDto> getFilteredEvents(
-            String text,
-            List<Long> categories,
-            Boolean paid,
-            LocalDateTime start,
-            LocalDateTime end,
-            Boolean onlyAvailable,
-            EwmPageRequest pageRequest) {
-        log.info("Запрос получения мероприятия с филтрацией по параметрам.");
+    public List<EventFullDto> getFilteredEvents(EventFilterParams filterParams, EwmPageRequest pageRequest) {
+        log.info("Get events filtered by parameter.");
+        QEvent event = QEvent.event;
         BooleanExpression result = null;
         BooleanExpression condition;
-        result = QEvent.event.state.eq(State.PUBLISHED);
-        if (text != null) {
-            condition = QEvent.event.annotation.toLowerCase().contains(text.toLowerCase())
-                    .or(QEvent.event.description.toLowerCase().contains(text.toLowerCase()));
+        result = event.state.eq(State.PUBLISHED);
+        if (filterParams.getText() != null) {
+            condition = event.annotation.toLowerCase().contains(filterParams.getText().toLowerCase())
+                    .or(event.description.toLowerCase().contains(filterParams.getText().toLowerCase()));
             result = result == null ? condition : result.and(condition);
         }
-        if (categories != null) {
-            condition = QEvent.event.category.id.in(categories);
+        if (filterParams.getCategories() != null) {
+            condition = event.category.id.in(filterParams.getCategories());
             result = result == null ? condition : result.and(condition);
         }
-        if (paid != null) {
-            condition = QEvent.event.paid.eq(paid);
+        if (filterParams.getPaid() != null) {
+            condition = event.paid.eq(filterParams.getPaid());
             result = result == null ? condition : result.and(condition);
         }
-        if (start != null && end != null) {
-            condition = QEvent.event.eventDate.between(start, end);
+        if (filterParams.getStart() != null && filterParams.getEnd() != null) {
+            condition = event.eventDate.between(filterParams.getStart(), filterParams.getEnd());
         } else {
-            condition = QEvent.event.eventDate.after(LocalDateTime.now());
+            condition = event.eventDate.after(LocalDateTime.now());
         }
         result = result == null ? condition : result.and(condition);
-        if (!onlyAvailable.equals(false)) {
-            condition = QEvent.event.confirmedRequests.lt(QEvent.event.participantLimit);
+        if (!filterParams.getOnlyAvailable().equals(false)) {
+            condition = event.confirmedRequests.lt(event.participantLimit);
             result = result == null ? condition : result.and(condition);
         }
-        Page<Event> foundEvents = eventRepository.findAll(result, pageRequest);
+        Page<Event> foundEvents = eventRepository.getFilteredEvents(result, pageRequest);
         if (foundEvents != null) {
             return eventMapper.toFullDto(foundEvents.getContent());
         }

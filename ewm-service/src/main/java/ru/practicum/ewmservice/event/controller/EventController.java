@@ -4,13 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewmservice.utils.EwmPageRequest;
 import ru.practicum.ewmservice.client.StatClient;
 import ru.practicum.ewmservice.client.dto.RequestDto;
 import ru.practicum.ewmservice.client.dto.ViewStats;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
 import ru.practicum.ewmservice.event.model.SortEvent;
 import ru.practicum.ewmservice.event.service.EventService;
+import ru.practicum.ewmservice.utils.EwmPageRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Positive;
@@ -40,7 +40,7 @@ public class EventController {
                                              @RequestParam(name = "onlyAvailable", required = false,
                                                      defaultValue = "false") Boolean onlyAvailable,
                                              @RequestParam(name = "sort", required = false, defaultValue = "VIEWS")
-                                                 SortEvent sort,
+                                             SortEvent sort,
                                              @PositiveOrZero @RequestParam(
                                                      name = "from", defaultValue = "0") Integer from,
                                              @Positive @RequestParam(
@@ -49,15 +49,18 @@ public class EventController {
         EwmPageRequest pageRequest;
         if (sort == SortEvent.EVENT_DATE) {
             pageRequest = new EwmPageRequest(from, size, Sort.by("eventDate").descending());
+        } else if (sort == SortEvent.RATING) {
+            pageRequest = new EwmPageRequest(from, size, Sort.by("rating").descending());
         } else {
             pageRequest = new EwmPageRequest(from, size, Sort.by("views").descending());
         }
+        EventFilterParams filterParams = new EventFilterParams(text, categories, paid, start, end, onlyAvailable, sort);
         statClient.saveRequest(new RequestDto(null, "ewm-service", httpServletRequest.getRequestURI(),
                 httpServletRequest.getRemoteAddr(), LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
 
         return eventService.getFilteredEvents(
-                text, categories, paid, start, end, onlyAvailable, pageRequest);
+                filterParams, pageRequest);
     }
 
     @GetMapping("/{eventId}")
@@ -74,7 +77,7 @@ public class EventController {
                 URLEncoder.encode(
                         LocalDateTime.now()
                                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                                , StandardCharsets.UTF_8),
+                        , StandardCharsets.UTF_8),
                 Collections.singletonList(httpServletRequest.getRequestURI()), false);
         if (!eventStat.isEmpty()) {
             event.setViews(eventStat.get(0).getHits());
